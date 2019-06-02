@@ -1,0 +1,39 @@
+# https://www.docker.elastic.co/
+
+version: '2.2'
+services:
+  registration-logs:
+    build: ./loggenerator
+    container_name: registration-logs
+    environment:
+      - LOG_NAME=registrations.log
+    volumes:
+      - ./logs/:/loggenerator/logs
+
+  # https://www.elastic.co/guide/en/elasticsearch/reference/7.1/docker.html#docker-prod-cluster-composefile 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.1.1
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node # need this not to run in cluster mode
+    volumes:
+      - .:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+  
+  # https://www.elastic.co/guide/en/kibana/7.1/docker.html
+  kibana:   
+    image: docker.elastic.co/kibana/kibana:7.1.1
+    container_name: kibana
+    ports:
+      - 5601:5601
+  # The following settings have different default values when using the Docker images:
+  #  elasticsearch.hosts=http://elasticsearch:9200
+
+  # https://www.elastic.co/guide/en/beats/filebeat/7.1/running-on-docker.html
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.1.1
+    container_name: filebeat
+    volumes: 
+      - ./logs:/logs/
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
